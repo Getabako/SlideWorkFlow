@@ -82,8 +82,11 @@ jobs:
 
       - name: Marpでスライドを変換
         run: |
+          # 出力ディレクトリを作成
+          mkdir -p output
+
           # HTMLに変換
-          marp "${{ env.FINAL_SLIDE_FILE }}" -o "output/${{ env.TOPIC_NAME }}.html" --html --allow-local-files
+          marp "${{ env.FINAL_SLIDE_FILE }}" -o "output/${{ env.TOPIC_NAME }}.html" --allow-local-files
 
           # PDFに変換
           marp "${{ env.FINAL_SLIDE_FILE }}" -o "output/${{ env.TOPIC_NAME }}.pdf" --pdf --allow-local-files
