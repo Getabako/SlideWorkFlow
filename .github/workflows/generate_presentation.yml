@@ -48,10 +48,13 @@ jobs:
             INPUT_FILE="${{ github.event.inputs.input_file }}"
           else
             # pushイベントの場合、変更されたYAMLファイルを使用
-            INPUT_FILE=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^inputs/.*\.yml$' | head -n 1)
+            # git diffで変更ファイルを検出（エラーを無視）
+            INPUT_FILE=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} 2>/dev/null | grep '^inputs/.*\.yml$' | head -n 1 || true)
+
+            # 変更ファイルが見つからない場合は、inputs/配下のYAMLファイルを検索
             if [ -z "$INPUT_FILE" ]; then
-              echo "エラー: 変更されたYAMLファイルが見つかりません"
-              exit 1
+              echo "git diffで変更ファイルが見つかりませんでした。inputs/配下を検索します。"
+              INPUT_FILE=$(ls inputs/*.yml 2>/dev/null | head -n 1 || echo "inputs/sample.yml")
             fi
           fi
           echo "input_file=$INPUT_FILE" >> $GITHUB_OUTPUT
