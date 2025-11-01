@@ -61,8 +61,14 @@ def embed_images_in_slides(slide_file, image_dir, topic_name, output_file):
 
     # グローバルスタイル定義を追加
     content.append("<style>")
+    content.append("@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');")
+    content.append("")
     content.append("section {")
     content.append("  display: flex;")
+    content.append("  font-family: 'Noto Sans JP', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;")
+    content.append("}")
+    content.append("h1, h2, h3, h4, h5, h6 {")
+    content.append("  font-family: 'Noto Sans JP', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;")
     content.append("}")
     content.append(".slide-content {")
     content.append("  flex: 1;")
@@ -104,11 +110,10 @@ def embed_images_in_slides(slide_file, image_dir, topic_name, output_file):
 
             # Marpのbg directiveを使用して画像を右側に配置
             # bg right:40% を使用して右側40%を画像に割り当て
-            content.append(f"<!-- _class: slide-with-image -->")
+            # 重要: bg directiveはスライドの最初に記述する必要がある
+            content.append(f"![bg right:40% fit]({rel_image_path})")
             content.append("")
             content.append(slide)
-            content.append("")
-            content.append(f"![bg right:40% fit]({rel_image_path})")
         else:
             # 画像がない場合は元のスライドをそのまま追加
             content.append(slide)
