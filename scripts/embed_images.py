@@ -1,0 +1,156 @@
+#!/usr/bin/env python3
+"""
+画像埋め込みスクリプト
+スライドファイルに生成された画像を埋め込みます
+画像は右端揃え、縦幅フルで配置されます
+"""
+
+import sys
+import os
+import re
+from pathlib import Path
+
+
+def parse_slides(slide_file):
+    """
+    Marpスライドファイルを解析してヘッダーとページに分割
+
+    Args:
+        slide_file: スライドファイルのパス
+
+    Returns:
+        (header, slides) のタプル
+    """
+    with open(slide_file, 'r', encoding='utf-8') as f:
+        content = f.read()
+
+    # ヘッダー部分を抽出
+    parts = content.split('---\n')
+
+    # 最初の2つはヘッダー
+    header = '---\n' + parts[1] + '---\n'
+
+    # 残りはスライド
+    slides = []
+    for i in range(2, len(parts)):
+        if parts[i].strip():
+            slides.append(parts[i].strip())
+
+    return header, slides
+
+
+def embed_images_in_slides(slide_file, image_dir, topic_name, output_file):
+    """
+    スライドに画像を埋め込む
+
+    Args:
+        slide_file: 元のスライドファイルのパス
+        image_dir: 画像ディレクトリ
+        topic_name: トピック名
+        output_file: 出力ファイルのパス
+    """
+    # スライドを解析
+    header, slides = parse_slides(slide_file)
+
+    # 画像を埋め込んだスライドを作成
+    content = []
+
+    # ヘッダーを追加（グローバルスタイルを含む）
+    content.append(header.rstrip())
+    content.append("")
+
+    # グローバルスタイル定義を追加
+    content.append("<style>")
+    content.append("section {")
+    content.append("  display: flex;")
+    content.append("}")
+    content.append(".slide-content {")
+    content.append("  flex: 1;")
+    content.append("  padding-right: 2em;")
+    content.append("}")
+    content.append(".slide-image {")
+    content.append("  position: absolute;")
+    content.append("  right: 0;")
+    content.append("  top: 0;")
+    content.append("  height: 100%;")
+    content.append("  width: auto;")
+    content.append("  object-fit: contain;")
+    content.append("}")
+    content.append("</style>")
+    content.append("")
+
+    # 各スライドに画像を埋め込む
+    image_path = Path(image_dir)
+
+    for i, slide in enumerate(slides, start=1):
+        # ページ区切り
+        if i > 1:
+            content.append("---")
+            content.append("")
+
+        # 画像ファイルのパスを作成
+        image_filename = f"{topic_name}_page{i:02d}.png"
+        image_file = image_path / image_filename
+
+        # 画像が存在するか確認
+        if image_file.exists():
+            # 相対パスを計算
+            slide_dir = Path(slide_file).parent
+            try:
+                rel_image_path = image_file.relative_to(slide_dir.parent)
+            except ValueError:
+                # 相対パスが計算できない場合は絶対パスを使用
+                rel_image_path = image_file
+
+            # Marpのbg directiveを使用して画像を右側に配置
+            # bg right:40% を使用して右側40%を画像に割り当て
+            content.append(f"<!-- _class: slide-with-image -->")
+            content.append("")
+            content.append(slide)
+            content.append("")
+            content.append(f"![bg right:40% fit]({rel_image_path})")
+        else:
+            # 画像がない場合は元のスライドをそのまま追加
+            content.append(slide)
+
+        content.append("")
+
+    # ファイルに書き込む
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(content))
+
+    print(f"画像を埋め込んだスライドを作成しました: {output_file}")
+
+
+def main():
+    if len(sys.argv) < 4:
+        print("使用方法: python embed_images.py <slide_file> <image_dir> <topic_name>")
+        sys.exit(1)
+
+    slide_file = sys.argv[1]
+    image_dir = sys.argv[2]
+    topic_name = sys.argv[3]
+
+    if not os.path.exists(slide_file):
+        print(f"エラー: スライドファイルが見つかりません: {slide_file}")
+        sys.exit(1)
+
+    if not os.path.exists(image_dir):
+        print(f"エラー: 画像ディレクトリが見つかりません: {image_dir}")
+        sys.exit(1)
+
+    # 出力ファイル名を生成
+    slide_path = Path(slide_file)
+    output_file = slide_path.parent / f"{topic_name}_slide_with_images.md"
+
+    # 画像を埋め込む
+    embed_images_in_slides(slide_file, image_dir, topic_name, output_file)
+
+    # 次のステップのために環境変数に保存
+    if 'GITHUB_ENV' in os.environ:
+        with open(os.environ['GITHUB_ENV'], 'a') as f:
+            f.write(f"FINAL_SLIDE_FILE={output_file}\n")
+
+
+if __name__ == "__main__":
+    main()

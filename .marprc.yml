@@ -1,0 +1,20 @@
+# Marp CLI設定ファイル
+# https://github.com/marp-team/marp-cli
+
+# 入力ファイル
+inputDir: ./slides
+
+# 出力ディレクトリ
+output: ./output
+
+# PDF出力を有効化
+pdf: true
+
+# HTML出力を有効化
+html: true
+
+# テーマディレクトリ
+themeSet: ./themes
+
+# 画像を許可
+allowLocalFiles: true
