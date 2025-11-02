@@ -60,27 +60,15 @@ def embed_images_in_slides(slide_file, image_dir, topic_name, output_file, use_s
     content.append(header.rstrip())
     content.append("")
 
-    # グローバルスタイル定義を追加
+    # グローバルスタイル定義を追加（日本語フォント設定のみ）
     content.append("<style>")
     content.append("@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');")
     content.append("")
     content.append("section {")
-    content.append("  position: relative;")
     content.append("  font-family: 'Noto Sans JP', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;")
-    content.append("  padding-right: 45%;")
     content.append("}")
     content.append("h1, h2, h3, h4, h5, h6 {")
     content.append("  font-family: 'Noto Sans JP', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;")
-    content.append("}")
-    content.append(".slide-image {")
-    content.append("  position: absolute;")
-    content.append("  right: 0;")
-    content.append("  top: 0;")
-    content.append("  height: 100%;")
-    content.append("  width: auto;")
-    content.append("  max-width: 40%;")
-    content.append("  object-fit: contain;")
-    content.append("  object-position: right center;")
     content.append("}")
     content.append("</style>")
     content.append("")
@@ -117,11 +105,11 @@ def embed_images_in_slides(slide_file, image_dir, topic_name, output_file, use_s
 
         # 画像を配置
         if image_exists:
-            # HTMLのimgタグを使用して画像を配置
-            # スライドコンテンツと画像を配置
-            content.append(slide)
+            # Marpのbg directiveを使用して画像を右側に配置
+            # bg right:40% を使用して右側40%を画像に割り当て
+            content.append(f"![bg right:40%]({image_url})")
             content.append("")
-            content.append(f'<img src="{image_url}" class="slide-image" />')
+            content.append(slide)
         else:
             # 画像がない場合は元のスライドをそのまま追加
             content.append(slide)
