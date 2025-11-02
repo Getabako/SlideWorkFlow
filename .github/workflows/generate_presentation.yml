@@ -84,7 +84,7 @@ jobs:
 
       - name: スライドに画像を埋め込む
         run: |
-          python scripts/embed_images.py "${{ env.SLIDE_FILE }}" "${{ env.IMAGE_DIR }}" "${{ env.TOPIC_NAME }}" --use-server-url
+          python scripts/embed_images.py "${{ env.SLIDE_FILE }}" "${{ env.IMAGE_DIR }}" "${{ env.TOPIC_NAME }}"
 
       - name: Marpでスライドを変換
         run: |
