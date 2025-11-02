@@ -57,7 +57,7 @@ def upload_images(image_dir, topic_name, password):
                 }
                 data = {
                     'password': password,
-                    'relativePath': relative_path
+                    'path': relative_path
                 }
 
                 # アップロード
