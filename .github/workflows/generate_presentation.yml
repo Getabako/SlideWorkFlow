@@ -86,15 +86,12 @@ jobs:
         run: |
           python scripts/embed_images.py "${{ env.SLIDE_FILE }}" "${{ env.IMAGE_DIR }}" "${{ env.TOPIC_NAME }}"
 
-      - name: Marpでスライドを変換
+      - name: MarpでPDFを生成
         run: |
           # 出力ディレクトリを作成
           mkdir -p output
 
-          # HTMLに変換
-          marp "${{ env.FINAL_SLIDE_FILE }}" -o "output/${{ env.TOPIC_NAME }}.html" --allow-local-files
-
-          # PDFに変換
+          # PDFに変換（ローカル画像を使用）
           marp "${{ env.FINAL_SLIDE_FILE }}" -o "output/${{ env.TOPIC_NAME }}.pdf" --pdf --allow-local-files
 
       - name: 成果物のアップロード
@@ -102,7 +99,6 @@ jobs:
         with:
           name: presentation-${{ env.TOPIC_NAME }}
           path: |
-            output/${{ env.TOPIC_NAME }}.html
             output/${{ env.TOPIC_NAME }}.pdf
             slides/${{ env.TOPIC_NAME }}_slide_with_images.md
             images/${{ env.TOPIC_NAME }}_*.png
