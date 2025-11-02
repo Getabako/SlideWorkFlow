@@ -39,7 +39,7 @@ def parse_slides(slide_file):
     return header, slides
 
 
-def embed_images_in_slides(slide_file, image_dir, topic_name, output_file):
+def embed_images_in_slides(slide_file, image_dir, topic_name, output_file, use_server_url=False):
     """
     スライドに画像を埋め込む
 
@@ -48,6 +48,7 @@ def embed_images_in_slides(slide_file, image_dir, topic_name, output_file):
         image_dir: 画像ディレクトリ
         topic_name: トピック名
         output_file: 出力ファイルのパス
+        use_server_url: サーバーURLを使用するかどうか
     """
     # スライドを解析
     header, slides = parse_slides(slide_file)
@@ -93,25 +94,34 @@ def embed_images_in_slides(slide_file, image_dir, topic_name, output_file):
             content.append("---")
             content.append("")
 
-        # 画像ファイルのパスを作成
-        image_filename = f"{topic_name}_page{i:02d}.png"
-        image_file = image_path / image_filename
+        # 画像URLを決定
+        if use_server_url:
+            # サーバーURLを使用（000.png ~ 999.png形式）
+            image_url = f"https://images.if-juku.net/{topic_name}/{i-1:03d}.png"
+            # サーバー上の画像は常に存在するものとして扱う
+            image_exists = True
+        else:
+            # ローカルファイルの相対パスを使用
+            image_filename = f"{topic_name}_page{i:02d}.png"
+            image_file = image_path / image_filename
+            image_exists = image_file.exists()
 
-        # 画像が存在するか確認
-        if image_file.exists():
-            # 相対パスを計算
-            slide_dir = Path(slide_file).parent
-            try:
-                rel_image_path = image_file.relative_to(slide_dir.parent)
-            except ValueError:
-                # 相対パスが計算できない場合は絶対パスを使用
-                rel_image_path = image_file
+            if image_exists:
+                # 相対パスを計算
+                slide_dir = Path(slide_file).parent
+                try:
+                    image_url = str(image_file.relative_to(slide_dir.parent))
+                except ValueError:
+                    # 相対パスが計算できない場合は絶対パスを使用
+                    image_url = str(image_file)
 
+        # 画像を配置
+        if image_exists:
             # HTMLのimgタグを使用して画像を配置
             # スライドコンテンツと画像を配置
             content.append(slide)
             content.append("")
-            content.append(f'<img src="{rel_image_path}" class="slide-image" />')
+            content.append(f'<img src="{image_url}" class="slide-image" />')
         else:
             # 画像がない場合は元のスライドをそのまま追加
             content.append(slide)
@@ -127,18 +137,21 @@ def embed_images_in_slides(slide_file, image_dir, topic_name, output_file):
 
 def main():
     if len(sys.argv) < 4:
-        print("使用方法: python embed_images.py <slide_file> <image_dir> <topic_name>")
+        print("使用方法: python embed_images.py <slide_file> <image_dir> <topic_name> [--use-server-url]")
         sys.exit(1)
 
     slide_file = sys.argv[1]
     image_dir = sys.argv[2]
     topic_name = sys.argv[3]
 
+    # サーバーURLを使用するかどうかを判定
+    use_server_url = '--use-server-url' in sys.argv
+
     if not os.path.exists(slide_file):
         print(f"エラー: スライドファイルが見つかりません: {slide_file}")
         sys.exit(1)
 
-    if not os.path.exists(image_dir):
+    if not use_server_url and not os.path.exists(image_dir):
         print(f"エラー: 画像ディレクトリが見つかりません: {image_dir}")
         sys.exit(1)
 
@@ -147,7 +160,10 @@ def main():
     output_file = slide_path.parent / f"{topic_name}_slide_with_images.md"
 
     # 画像を埋め込む
-    embed_images_in_slides(slide_file, image_dir, topic_name, output_file)
+    embed_images_in_slides(slide_file, image_dir, topic_name, output_file, use_server_url)
+
+    if use_server_url:
+        print(f"サーバーURL（https://images.if-juku.net/{topic_name}/）を使用して画像を埋め込みました")
 
     # 次のステップのために環境変数に保存
     if 'GITHUB_ENV' in os.environ:

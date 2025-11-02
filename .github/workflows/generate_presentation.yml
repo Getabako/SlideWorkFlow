@@ -30,7 +30,7 @@ jobs:
       - name: 依存関係のインストール
         run: |
           pip install --upgrade pip
-          pip install pyyaml google-genai pillow
+          pip install -r requirements.txt
 
       - name: Node.js環境のセットアップ
         uses: actions/setup-node@v4
@@ -76,9 +76,15 @@ jobs:
         run: |
           python scripts/generate_images.py "${{ env.IMAGE_PROMPT_CSV }}" "${{ env.TOPIC_NAME }}"
 
+      - name: 画像をサーバーにアップロード
+        env:
+          UPLOAD_PASSWORD: ${{ secrets.IMAGE_UPLOAD_PASSWORD }}
+        run: |
+          python scripts/upload_images.py "${{ env.IMAGE_DIR }}" "${{ env.TOPIC_NAME }}" "$UPLOAD_PASSWORD"
+
       - name: スライドに画像を埋め込む
         run: |
-          python scripts/embed_images.py "${{ env.SLIDE_FILE }}" "${{ env.IMAGE_DIR }}" "${{ env.TOPIC_NAME }}"
+          python scripts/embed_images.py "${{ env.SLIDE_FILE }}" "${{ env.IMAGE_DIR }}" "${{ env.TOPIC_NAME }}" --use-server-url
 
       - name: Marpでスライドを変換
         run: |
