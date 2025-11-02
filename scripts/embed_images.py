@@ -95,13 +95,15 @@ def embed_images_in_slides(slide_file, image_dir, topic_name, output_file, use_s
             image_exists = image_file.exists()
 
             if image_exists:
-                # 相対パスを計算
+                # スライドファイルからの相対パスを計算
+                # slides/ から images/ へは ../images/... となる
                 slide_dir = Path(slide_file).parent
                 try:
-                    image_url = str(image_file.relative_to(slide_dir.parent))
+                    relative_path = image_file.relative_to(slide_dir.parent)
+                    image_url = str(Path('..') / relative_path).replace('\\', '/')
                 except ValueError:
                     # 相対パスが計算できない場合は絶対パスを使用
-                    image_url = str(image_file)
+                    image_url = str(image_file.absolute()).replace('\\', '/')
 
         # 画像を配置
         if image_exists:
